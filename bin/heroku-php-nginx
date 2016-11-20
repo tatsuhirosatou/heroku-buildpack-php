@@ -193,8 +193,8 @@ fi
 logs+=( "/tmp/heroku.php-fpm.$PORT.log" "/tmp/heroku.php-fpm.www.$PORT.log" "/tmp/heroku.php-fpm.$PORT.www.slowlog" "/tmp/heroku.nginx_access.$PORT.log" )
 
 # a bunch of checks; don't load any INIs to prevent newrelic etc from loading, we don't need all that stuff
-# php -n -r 'exit((int)version_compare(PHP_VERSION, "5.5.11", "<"));' || { echo "This program requires PHP 5.5.11 or newer; check your 'php' command." >&2; exit 1; }
-# { php-fpm -n -v | php -n -r 'exit((int)version_compare(preg_replace("#PHP (\S+) \(fpm-fcgi\).+$#sm", "\\1", file_get_contents("php://stdin")), "5.5.11", "<"));'; } || { echo "This program requires PHP 5.5.11 or newer; check your 'php-fpm' command." >&2; exit 1; }
+php -n -r 'exit((int)version_compare(PHP_VERSION, "5.5.11", "<"));' || { echo "This program requires PHP 5.5.11 or newer; check your 'php' command." >&2; exit 1; }
+{ php-fpm -n -v | php -n -r 'exit((int)version_compare(preg_replace("#PHP (\S+) \(fpm-fcgi\).+$#sm", "\\1", file_get_contents("php://stdin")), "5.5.11", "<"));'; } || { echo "This program requires PHP 5.5.11 or newer; check your 'php-fpm' command." >&2; exit 1; }
 unset -f php-fpm # remove the alias we made earlier that would prevent newrelic from starting on php-fpm -v
 
 # make sure we run a local composer.phar if present, or global composer if not
@@ -277,7 +277,7 @@ if [[ -z ${WEB_CONCURRENCY:-} ]]; then
     read WEB_CONCURRENCY php_memory_limit <<<$(PHP_INI_SCAN_DIR= php ${php_config:+-c "$php_config"} $(composer config vendor-dir 2> /dev/null | tail -n 1)/heroku/heroku-buildpack-php/bin/util/autotune.php -y "$fpm_config" -t "$DOCUMENT_ROOT" "$ram") # tail, as composer echos outdated version warnings to STDOUT
     [[ $WEB_CONCURRENCY -lt 1 ]] && WEB_CONCURRENCY=1
     export WEB_CONCURRENCY
-    
+
     echo "${WEB_CONCURRENCY} processes at ${php_memory_limit}B memory limit." >&2
 else
     echo "Using WEB_CONCURRENCY=${WEB_CONCURRENCY} processes." >&2
@@ -385,7 +385,7 @@ echo "Starting nginx..." >&2
     trap 'trap - TERM; kill -TERM $pid 2> /dev/null || true & wait $pid 2> /dev/null || true; [[ ${BASHPID:-} ]] && kill -TERM $BASHPID' TERM
     trap 'trap - USR1 EXIT; kill -TERM $pid 2> /dev/null || true & wait $pid 2> /dev/null || true; [[ ${BASHPID:-} ]] && kill -USR1 $BASHPID' USR1
     
-    nginx -g "daemon off; include $nginx_config;" & pid=$!
+    bin/proximo nginx -g "daemon off; include $nginx_config;" & pid=$!
     
     wait
 ) & pids+=($!)
