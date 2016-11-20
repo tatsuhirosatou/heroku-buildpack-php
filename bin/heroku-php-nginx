@@ -362,6 +362,8 @@ fi
 ) & pids+=($!)
 disown $!
 
+run_commands() {
+
 echo "Starting php-fpm..." >&2
 (
     trap '' INT;
@@ -369,7 +371,7 @@ echo "Starting php-fpm..." >&2
     trap 'trap - TERM; kill -TERM $pid 2> /dev/null || true & wait $pid 2> /dev/null || true; [[ ${BASHPID:-} ]] && kill -TERM $BASHPID' TERM
     trap 'trap - USR1 EXIT; kill -TERM $pid 2> /dev/null || true & wait $pid 2> /dev/null || true; [[ ${BASHPID:-} ]] && kill -USR1 $BASHPID' USR1
     
-    bin/proximo php-fpm --nodaemonize -y "$fpm_config" ${php_config:+-c "$php_config"} & pid=$!
+    php-fpm --nodaemonize -y "$fpm_config" ${php_config:+-c "$php_config"} & pid=$!
     
     wait
 ) & pids+=($!)
@@ -390,6 +392,10 @@ echo "Starting nginx..." >&2
     wait
 ) & pids+=($!)
 disown $!
+
+}
+
+bin/proximo run_commands()
 
 # on Heroku, there is a "state changed from starting to up", but for local execution, we want a "ready" message
 [[ -z ${DYNO:-} || $verbose ]] && echo "Application ready for connections on port $PORT." >&2
