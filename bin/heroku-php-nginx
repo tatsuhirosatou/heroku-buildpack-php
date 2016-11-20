@@ -362,8 +362,6 @@ fi
 ) & pids+=($!)
 disown $!
 
-run_commands() {
-
 echo "Starting php-fpm..." >&2
 (
     trap '' INT;
@@ -392,10 +390,6 @@ echo "Starting nginx..." >&2
     wait
 ) & pids+=($!)
 disown $!
-
-}
-
-bin/proximo run_commands
 
 # on Heroku, there is a "state changed from starting to up", but for local execution, we want a "ready" message
 [[ -z ${DYNO:-} || $verbose ]] && echo "Application ready for connections on port $PORT." >&2
